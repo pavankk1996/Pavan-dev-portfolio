@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-
 import 'core/theme/app_theme.dart';
 import 'viewmodels/home_view_model.dart';
 import 'viewmodels/projects_view_model.dart';
@@ -27,8 +26,6 @@ class PortfolioApp extends StatelessWidget {
         title: 'Pavan Kumar S — Portfolio',
         theme: AppTheme.light(),
         debugShowCheckedModeBanner: false,
-
-        // ✅ Latest Responsive Framework builder
         builder: (context, child) => ResponsiveBreakpoints.builder(
           child: ClampingScrollWrapper.builder(context, child!),
           breakpoints: const [
@@ -54,6 +51,8 @@ class PortfolioShell extends StatefulWidget {
 class _PortfolioShellState extends State<PortfolioShell>
     with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _aboutKey = GlobalKey();
+
   late final AnimationController _fadeController;
 
   @override
@@ -73,137 +72,36 @@ class _PortfolioShellState extends State<PortfolioShell>
     super.dispose();
   }
 
-  void scrollTo(double offset) {
-    _scrollController.animateTo(
-      offset,
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeInOut,
-    );
+  /// 🔹 Smooth scroll to a given widget key
+  void scrollToSection(GlobalKey key) {
+    final context = key.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeInOutCubic,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final vm = Provider.of<HomeViewModel>(context, listen: false);
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        toolbarHeight: 70,
-        title: Row(
-          children: [
-            Text(vm.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            const Spacer(),
-            LayoutBuilder(
-              builder: (context, cons) {
-                if (cons.maxWidth > 800) {
-                  // Desktop / Tablet Navigation
-                  return Row(
-                    children: [
-                      TextButton(
-                        onPressed: () => scrollTo(0),
-                        child: const Text('Home'),
-                      ),
-                      TextButton(
-                        onPressed: () => scrollTo(700),
-                        child: const Text('About'),
-                      ),
-                      TextButton(
-                        onPressed: () => scrollTo(1400),
-                        child: const Text('Projects'),
-                      ),
-                      TextButton(
-                        onPressed: () => scrollTo(2300),
-                        child: const Text('Resume'),
-                      ),
-                      TextButton(
-                        onPressed: () => scrollTo(3000),
-                        child: const Text('Contact'),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        onPressed: () => vm.openResume(),
-                        icon: const Icon(Icons.download),
-                        label: const Text('Resume'),
-                      ),
-                    ],
-                  );
-                } else {
-                  // Mobile Navigation
-                  return IconButton(
-                    onPressed: () => _openMobileMenu(context),
-                    icon: const Icon(Icons.menu),
-                  );
-                }
-              },
-            ),
-          ],
-        ),
-      ),
       body: FadeTransition(
         opacity: CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
         child: SingleChildScrollView(
           controller: _scrollController,
-          child: const Column(
+          child: Column(
             children: [
-              HomeSection(),
-              AboutSection(),
-              ProjectsSection(),
-              ResumeSection(),
-              ContactSection(),
+              HomeSection(onViewMorePressed: () => scrollToSection(_aboutKey)),
+              AboutSection(key: _aboutKey),
+              // ProjectsSection(),
+              // ResumeSection(),
+              // ContactSection(),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  void _openMobileMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: const Text('Home'),
-                onTap: () {
-                  Navigator.pop(context);
-                  scrollTo(0);
-                },
-              ),
-              ListTile(
-                title: const Text('About'),
-                onTap: () {
-                  Navigator.pop(context);
-                  scrollTo(700);
-                },
-              ),
-              ListTile(
-                title: const Text('Projects'),
-                onTap: () {
-                  Navigator.pop(context);
-                  scrollTo(1400);
-                },
-              ),
-              ListTile(
-                title: const Text('Resume'),
-                onTap: () {
-                  Navigator.pop(context);
-                  scrollTo(2300);
-                },
-              ),
-              ListTile(
-                title: const Text('Contact'),
-                onTap: () {
-                  Navigator.pop(context);
-                  scrollTo(3000);
-                },
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }

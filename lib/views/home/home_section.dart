@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/home_view_model.dart';
-import '../common/tech_chip.dart';
 
 class HomeSection extends StatefulWidget {
-  const HomeSection({super.key});
+  final VoidCallback onViewMorePressed;
+
+  const HomeSection({super.key, required this.onViewMorePressed});
 
   @override
   State<HomeSection> createState() => _HomeSectionState();
@@ -41,89 +42,68 @@ class _HomeSectionState extends State<HomeSection>
   Widget build(BuildContext context) {
     final vm = Provider.of<HomeViewModel>(context);
     final width = MediaQuery.sizeOf(context).width;
+    final height = MediaQuery.sizeOf(context).height;
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 28),
-      constraints: const BoxConstraints(maxWidth: 1400),
-      child: SlideTransition(
-        position: _slide,
-        child: FadeTransition(
-          opacity: _fade,
-          child: Row(
+      color: Colors.black,
+      width: double.infinity,
+      height: height, // full screen height
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 👇 Center main content
+          Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      vm.name,
-                      style: TextStyle(
-                        fontSize: width > 800 ? 42 : 34,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.indigo[900],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      vm.tagline,
-                      style: TextStyle(fontSize: width > 800 ? 20 : 16),
-                    ),
-                    const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        ElevatedButton(
-                          onPressed: () => vm.openResume(),
-                          child: const Text('Download Resume'),
-                        ),
-                        const SizedBox(width: 12),
-                        OutlinedButton(
-                          onPressed: () => _scrollTo(1400),
-                          child: const Text('View Projects'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: const [
-                        TechChip('Flutter'),
-                        TechChip('Dart'),
-                        TechChip('Kotlin'),
-                        TechChip('Firebase'),
-                        TechChip('BLoC / Cubit'),
-                        TechChip('CI/CD'),
-                      ],
-                    ),
-                  ],
+              ClipOval(
+                child: Image.asset(
+                  vm.profileImage,
+                  width: width < 300 ? 75 : 150,
+                  height: width < 300 ? 75 : 150,
+                  fit: BoxFit.cover,
                 ),
               ),
-              if (width > 800)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 32.0),
-                    child: Hero(
-                      tag: 'hero-image',
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: Image.asset(
-                          vm.heroImage,
-                          fit: BoxFit.cover,
-                          height: 340,
-                        ),
-                      ),
-                    ),
+              const SizedBox(height: 24),
+              Text(
+                vm.name,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              SlideTransition(
+                position: _slide,
+                child: FadeTransition(
+                  opacity: _fade,
+                  child: Text(
+                    vm.tagline,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+                    textAlign: TextAlign.center,
                   ),
                 ),
+              ),
             ],
           ),
-        ),
+
+          // 👇 Positioned "View More" button (direct child of Stack)
+          Positioned(
+            bottom: 32,
+            left: 0,
+            right: 0,
+            child: TextButton.icon(
+              onPressed: widget.onViewMorePressed,
+              icon: const Icon(Icons.keyboard_arrow_down),
+              label: const Text('View More', style: TextStyle(fontSize: 16)),
+              style: TextButton.styleFrom(foregroundColor: Colors.blueAccent),
+            ),
+          ),
+        ],
       ),
     );
-  }
-
-  void _scrollTo(double offset) {
-    final shell = context.findAncestorStateOfType<State>();
-    // Parent shell handles scrolling; nothing required here.
-    // Scroll from App shell via AppBar buttons.
   }
 }
